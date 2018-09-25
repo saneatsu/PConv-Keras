@@ -17,22 +17,31 @@ import matplotlib.pyplot as plt
 
 import sys
 import os
+
 if os.name == 'nt':
-    path_prefix = 'D:/workspace'
+    path_prefix = '/workspace'
 else:
-    path_prefix = '/mnt/d/workspace'
-    #path_prefix = '/workspace'
+    path_prefix = '/mnt'
+
 sys.path.append('{}/PConv-Keras'.format(path_prefix))
+
+# print(os.getcwd()) # Fix
+sys.path.append(os.pardir) # Fix
 
 from libs.pconv_model import PConvUnet
 from libs.util import random_mask
 
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 plt.ioff()
 
 # SETTINGS
-TRAIN_DIR = r"{}/PConv-Keras/data/food_images_set/train".format(path_prefix)
-VAL_DIR = r"{}/PConv-Keras/data/food_images_set/validation".format(path_prefix)
-TEST_DIR = r"{}/PConv-Keras/data/food_images_set/validation".format(path_prefix)
+# TRAIN_DIR = r"{}/PConv-Keras/data/food_images_set/train".format(path_prefix)
+# VAL_DIR = r"{}/PConv-Keras/data/food_images_set/validation".format(path_prefix)
+# TEST_DIR = r"{}/PConv-Keras/data/food_images_set/validation".format(path_prefix)
+TRAIN_DIR = r"{}/PConv-Keras/house-dataset/train".format(path_prefix)
+VAL_DIR   = r"{}/PConv-Keras/house-dataset/valid".format(path_prefix)
+TEST_DIR  = r"{}/PConv-Keras/house-dataset/test".format(path_prefix)
 
 BATCH_SIZE = 16
 
@@ -80,10 +89,10 @@ model = PConvUnet(weight_filepath="{}/PConv-Keras/data/model/".format(path_prefi
 # Run training for certain amount of epochs
 model.fit(
     train_generator,
-    steps_per_epoch=10,
+    steps_per_epoch=10, # Fix
     validation_data=val_generator,
     validation_steps=100,
-    epochs=5,
+    epochs=100, # Fix
     plot_callback=None,
     callbacks=[
         TensorBoard(log_dir="{}/PConv-Keras/data/model/initial_training".format(path_prefix), write_graph=False)

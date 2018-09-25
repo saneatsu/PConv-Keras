@@ -14,7 +14,7 @@ import sys
 if os.name == 'nt':
     path_prefix = 'D:/workspace'
 else:
-    path_prefix = '/mnt/d/workspace'
+    path_prefix = '/mnt'
     #path_prefix = '/workspace'
 sys.path.append('{}/PConv-Keras'.format(path_prefix))
 
