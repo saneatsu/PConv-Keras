@@ -32,6 +32,46 @@ input qid from 1 to 10
 python3 run_predict_api.py --qid 1
 ```
 
+## Discription of Directory Structure
+
+PConv-Keras/  
+　├ data/  
+　│　├ logs/  
+　│　├ model/  
+　│　│　└ initial_training/  
+　│　└ test_samples/  
+　│　  
+　├ house-dataset/  
+　│　├ test/  
+　│　├ train/  
+　│　└ valid/    
+　│　  
+　└ house-dataset-src/  
+　 　├ original/  
+　 　│　│ en/  
+　 　│　└ jp/  
+　 　└ resized/  
+
+
+### data
+
+
+### house-dataset
+- test/
+- train/
+- valid/
+
+### house-dataset-src
+Each directories have 9316 house images.
+
+- original/
+  - en/
+    - File name is English(about 2500x5000)
+  - jp/
+    - File name is Japanese(about 2500x5000)    
+- resized/
+  - Resized and crop to 256x256 by generate_training.pyls ini
+
 
 # Partial Convolutions for Image Inpainting using Keras
 Keras implementation of "*Image Inpainting for Irregular Holes Using Partial Convolutions*", https://arxiv.org/abs/1804.07723. A huge shoutout the authors Guilin Liu, Fitsum A. Reda, Kevin J. Shih, Ting-Chun Wang, Andrew Tao and Bryan Catanzaro from NVIDIA corporation for releasing this awesome paper, it's been a great learning experience for me to implement the architecture, the partial convolutional layer, and the loss functions. 
