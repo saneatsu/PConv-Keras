@@ -20,6 +20,8 @@ sys.path.append('{}/PConv-Keras'.format(path_prefix))
 
 from libs.pconv_model import PConvUnet
 
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 @attr.s
 class FoodQuiz:
     question_id = attr.ib()
@@ -130,7 +132,7 @@ def inpainting(quiz, debug=True):
     mask_na = np.array(mask_tmp_list)
 
     model = PConvUnet(weight_filepath='{}/PConv-Keras/data/model/'.format(path_prefix))
-    model.load(r"{}/PConv-Keras/data/model/40_weights_2018-08-19-02-59-38.h5".format(path_prefix))
+    model.load("{}/PConv-Keras/data/model/12_weights_2018-09-26-14-05-28.h5".format(path_prefix))
 
     pred_img_set = model.predict([masked_na, mask_na])
 
