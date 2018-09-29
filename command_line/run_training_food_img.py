@@ -1,50 +1,33 @@
+import os
+import sys
 import gc
 import datetime
-
-import pandas as pd
-import numpy as np
-
+import cv2
 from copy import deepcopy
 from tqdm import tqdm
+import matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import TensorBoard
 from keras import backend as K
 
-import cv2
-import matplotlib
-import matplotlib.pyplot as plt
+sys.path.append(os.pardir)
+sys.path.append(cst.MNT_PATH)
 
-import sys
-import os
-
-if os.name == 'nt':
-    path_prefix = '/workspace'
-else:
-    path_prefix = '/mnt'
-
-sys.path.append('{}/PConv-Keras'.format(path_prefix))
-
-# print(os.getcwd()) # Fix
-sys.path.append(os.pardir) # Fix
-
+import const as cst
 from libs.pconv_model import PConvUnet
 from libs.util import random_mask
 
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-plt.ioff()
-
-# SETTINGS
-# TRAIN_DIR = r"{}/PConv-Keras/data/food_images_set/train".format(path_prefix)
-# VAL_DIR = r"{}/PConv-Keras/data/food_images_set/validation".format(path_prefix)
-# TEST_DIR = r"{}/PConv-Keras/data/food_images_set/validation".format(path_prefix)
-TRAIN_DIR = r"{}/PConv-Keras/house-dataset/train".format(path_prefix)
-VAL_DIR   = r"{}/PConv-Keras/house-dataset/valid".format(path_prefix)
-TEST_DIR  = r"{}/PConv-Keras/house-dataset/test".format(path_prefix)
-
+TRAIN_DIR = '{}/house-dataset/train'.format(cst.MNT_PATH)
+VAL_DIR   = '{}/house-dataset/valid'.format(cst.MNT_PATH)
+TEST_DIR  = '{}/house-dataset/test'.format(cst.MNT_PATH)
 BATCH_SIZE = 16
-
+plt.ioff()
 
 class DataGenerator(ImageDataGenerator):
     def flow_from_directory(self, directory, *args, **kwargs):
@@ -85,17 +68,16 @@ val_generator = val_datagen.flow_from_directory(
 )
 
 # Instantiate the model
-model = PConvUnet(weight_filepath="{}/PConv-Keras/data/model/".format(path_prefix))
+model = PConvUnet(weight_filepath="{}/data/model/".format(cst.MNT_PATH))
 # Run training for certain amount of epochs
 model.fit(
     train_generator,
     steps_per_epoch=10, # Fix
     validation_data=val_generator,
     validation_steps=100,
-    epochs=100, # Fix
+    epochs=3000, # Fix
     plot_callback=None,
     callbacks=[
-        TensorBoard(log_dir="{}/PConv-Keras/data/model/initial_training".format(path_prefix), write_graph=False)
+        TensorBoard(log_dir='{}/data/model/initial_training'.format(cst.MNT_PATH), write_graph=False)
     ]
 )
-

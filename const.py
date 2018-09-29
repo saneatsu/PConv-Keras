@@ -1,0 +1,1 @@
+MNT_PATH = '/nfs/host/PConv-Keras'

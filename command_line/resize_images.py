@@ -1,16 +1,19 @@
 import os
+import sys
 import pathlib
 import cv2
 import numpy as np
 import json
 
+sys.path.append(os.pardir) # for using const.py
+
+import const as cst
+
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-
-# NOTE: You need to check resized_dir's permission
-original_dir = ['/mnt/PConv-Keras/house-dataset-src/original/']
-resized_dir  = ['/mnt/PConv-Keras/house-dataset-src/resized/']
-
+# NOTE: You need to check directory's permission
+original_dir = ['{}/house-dataset-src/original/'.format(cst.MNT_PATH)]
+resized_dir  = ['{}/house-dataset-src/resized/'.format(cst.MNT_PATH)]
 max_height = 256
 max_width  = 256
 img_cnt    = 0

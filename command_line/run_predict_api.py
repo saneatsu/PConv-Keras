@@ -1,26 +1,24 @@
 import os
-import numpy as np
-import argparse
-import warnings
+import sys
 import requests
 from io import BytesIO
 import base64
 import attr
+import json
+import numpy as np
+import argparse
+import warnings
 import cv2
 import skimage.io as ski_io
-import json
 
-import sys
-if os.name == 'nt':
-    path_prefix = 'D:/workspace'
-else:
-    path_prefix = '/mnt'
-    #path_prefix = '/workspace'
-sys.path.append('{}/PConv-Keras'.format(path_prefix))
+sys.path.append(os.pardir)
 
+import const as cst
 from libs.pconv_model import PConvUnet
 
+sys.path.append(cst.MNT_PATH)
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 
 @attr.s
 class FoodQuiz:
