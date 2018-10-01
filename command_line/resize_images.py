@@ -51,7 +51,7 @@ for i in range(len(original_dir)):
                 img = cv2.imread(str(onlyfiles[k]).replace('\\', '/'))
                 height, width, channels = img.shape
 
-                if(height < max_height or width < max_width):
+                if(height < max_heｓight or width < max_width):
                     print('skip this image:'+str(onlyfiles[k]))
                 elif max_height < height or max_width < width:
                     # get scaling factor
