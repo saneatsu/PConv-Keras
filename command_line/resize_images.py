@@ -9,26 +9,26 @@ sys.path.append(os.pardir) # for using const.py
 
 import const as cst
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # NOTE: You need to check directory's permission
 original_dir = ['{}/house-dataset-src/original/'.format(cst.MNT_PATH)]
 resized_dir  = ['{}/house-dataset-src/resized/'.format(cst.MNT_PATH)]
 max_height = 256
-max_width  = 256
+max_width  = 512
 img_cnt    = 0
 
 
 def cv_imread(filePath):
-    cv_img=cv2.imdecode(np.fromfile(filePath,dtype=np.uint8),-1)
+    cv_img=cv2.imdecode(np.fromfile(filePath,dtype=np.uint8), -1)
     return cv_img
 
 
-# Make bmp file to resized_dir from original_dir
-for i in range(len(original_dir)):
-    d = original_dir[i]
+# Make bmp file to RESIZED_PATH from ORIGINAL_PATH
+for i in range(len(cst.ORIGINAL_PATH)):
+    d = cst.ORIGINAL_PATH[i]
     d_child=[os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
-    print(original_dir[i])
+    print(cst.ORIGINAL_PATH[i])
     print(d_child)
 
     for j in range(len(d_child)):
@@ -45,21 +45,23 @@ for i in range(len(original_dir)):
                    str(onlyfiles[k]).endswith('.bmp')):
                     pass
                 else:
-                    print("skip this file:" + str(onlyfiles[k]))
+                    print('skip this file:' + str(onlyfiles[k]))
                     continue
 
                 img = cv2.imread(str(onlyfiles[k]).replace('\\', '/'))
                 height, width, channels = img.shape
-
-                if(height < max_heｓight or width < max_width):
-                    print('skip this image:'+str(onlyfiles[k]))
+                
+                if(height < max_height or width < max_width):
+                    print('skip this image:' + str(onlyfiles[k]))
                 elif max_height < height or max_width < width:
-                    # get scaling factor
+                    # Get scaling factor
                     scaling_factor = max_height / float(height)
-                    if max_width / float(width) > scaling_factor:
+                    # 216/2688 = 0.09523809523
+                    # 512/5376 = 0.09523809523
+                    if max_width / float(width) > scaling_factor: # Basically don't pass through here
                         scaling_factor = max_width / float(width)
 
-                    # resize image(reduction)
+                    # Resize image(reduction)
                     img = cv2.resize(img,
                                      None,
                                      fx=scaling_factor,
@@ -67,16 +69,22 @@ for i in range(len(original_dir)):
                                      interpolation=cv2.INTER_AREA)
                     sh_height, sh_width, sh_channels = img.shape
 
-                    if(sh_height > 256):
-                        crop_img = img[int(sh_height/2)-128:int(sh_height/2)+128, 0:256]
-                    elif(sh_width > 256):
-                        crop_img = img[0:256,int(sh_height/2)-128:int(sh_height/2)+128]
+                    if(sh_height > max_height):
+                        crop_height = int(sh_height/2)
+                        crop_img = img[crop_height-128:crop_height+128, 0:512]
+                    elif(sh_width > max_width):
+                        crop_width = int(sh_height/2)
+                        crop_img = img[0:256, crop_width-128:crop_width+128+256]
                     else:
-                        crop_img = img
+                        crop_img = img # Basically pass through here
 
+                        
                     params = list()
                     params.append(cv2.IMWRITE_PNG_COMPRESSION)
                     params.append(8)
-                    img_cnt+=1
-                    img_file_name=resized_dir[i]+"/img_"+"{0:07d}".format(img_cnt)+".bmp"
+                    img_cnt += 1
+                    img_file_name = cst.RESIZED_PATH[i] + \
+                                    '/img_' + \
+                                    '{0:07d}'.format(img_cnt) + \
+                                    '.bmp'
                     cv2.imwrite(img_file_name, crop_img, params)

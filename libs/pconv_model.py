@@ -57,7 +57,7 @@ class PConvUnet(object):
         
         return model
         
-    def build_pconv_unet(self, train_bn=True, lr=0.0002):      
+    def build_pconv_unet(self, train_bn=True, lr=0.0002):
 
         # INPUTS
         inputs_img = Input((self.img_rows, self.img_cols, 3))
