@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime
 
 from keras.models import Model
@@ -10,18 +11,22 @@ from keras.applications import VGG16
 from keras import backend as K
 from libs.pconv_layer import PConv2D
 
+sys.path.append(os.pardir)
+
+import const as cst
+
 
 class PConvUnet(object):
 
-    def __init__(self, img_rows=256, img_cols=256, weight_filepath=None):
+    def __init__(self, img_rows=cst.MAX_HEIGHT, img_cols=cst.MAX_WIDTH, weight_filepath=None):
         """Create the PConvUnet. If variable image size, set img_rows and img_cols to None"""
         
         # Settings
         self.weight_filepath = weight_filepath
         self.img_rows = img_rows
         self.img_cols = img_cols
-        assert self.img_rows >= 256, 'Height must be >=256 pixels'
-        assert self.img_cols >= 256, 'Width must be >=256 pixels'
+        assert self.img_rows >= cst.MAX_HEIGHT, 'Height must be >=256 pixels'
+        assert self.img_cols >= cst.MAX_WIDTH, 'Width must be >=256 pixels'
 
         # Set current epoch
         self.current_epoch = 0
@@ -190,14 +195,14 @@ class PConvUnet(object):
         """
         
         # Loop over epochs
-        for _ in range(epochs):            
-            
+        for _ in range(epochs):
             # Fit the model
             self.model.fit_generator(
                 generator,
                 epochs=self.current_epoch+1,
                 initial_epoch=self.current_epoch,
-                *args, **kwargs
+                *args,
+                **kwargs
             )
 
             # Update epoch 

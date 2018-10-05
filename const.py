@@ -1,6 +1,8 @@
 # NOTE: You need to check directory's permission
 
-MNT_PATH      = '/nfs/host/PConv-Keras'
+MAX_HEIGHT = 256
+MAX_WIDTH  = 512
+MNT_PATH   = '/nfs/host/PConv-Keras'
 
 # house-dataset-src dir
 ORIGINAL_PATH = ['{}/house-dataset-src/original/'.format(MNT_PATH)]

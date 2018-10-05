@@ -11,12 +11,7 @@ import const as cst
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-# NOTE: You need to check directory's permission
-original_dir = ['{}/house-dataset-src/original/'.format(cst.MNT_PATH)]
-resized_dir  = ['{}/house-dataset-src/resized/'.format(cst.MNT_PATH)]
-max_height = 256
-max_width  = 512
-img_cnt    = 0
+img_cnt      = 0
 
 
 def cv_imread(filePath):
@@ -51,15 +46,15 @@ for i in range(len(cst.ORIGINAL_PATH)):
                 img = cv2.imread(str(onlyfiles[k]).replace('\\', '/'))
                 height, width, channels = img.shape
                 
-                if(height < max_height or width < max_width):
+                if(height < cst.MAX_HEIGHT or width < cst.MAX_WIDTH):
                     print('skip this image:' + str(onlyfiles[k]))
-                elif max_height < height or max_width < width:
+                elif cst.MAX_HEIGHT < height or cst.MAX_WIDTH < width:
                     # Get scaling factor
-                    scaling_factor = max_height / float(height)
+                    scaling_factor = cst.MAX_HEIGHT / float(height)
                     # 216/2688 = 0.09523809523
                     # 512/5376 = 0.09523809523
-                    if max_width / float(width) > scaling_factor: # Basically don't pass through here
-                        scaling_factor = max_width / float(width)
+                    if cst.MAX_WIDTH / float(width) > scaling_factor: # Basically don't pass through here
+                        scaling_factor = cst.MAX_WIDTH / float(width)
 
                     # Resize image(reduction)
                     img = cv2.resize(img,
@@ -69,10 +64,10 @@ for i in range(len(cst.ORIGINAL_PATH)):
                                      interpolation=cv2.INTER_AREA)
                     sh_height, sh_width, sh_channels = img.shape
 
-                    if(sh_height > max_height):
+                    if(sh_height > cst.MAX_HEIGHT):
                         crop_height = int(sh_height/2)
                         crop_img = img[crop_height-128:crop_height+128, 0:512]
-                    elif(sh_width > max_width):
+                    elif(sh_width > cst.MAX_WIDTH):
                         crop_width = int(sh_height/2)
                         crop_img = img[0:256, crop_width-128:crop_width+128+256]
                     else:

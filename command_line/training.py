@@ -23,7 +23,7 @@ from libs.util import random_mask
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-BATCH_SIZE = 16
+BATCH_SIZE = 8 # 16
 plt.ioff()
 
 class DataGenerator(ImageDataGenerator):
@@ -54,14 +54,14 @@ train_datagen = DataGenerator(
                     horizontal_flip=True)
 train_generator = train_datagen.flow_from_directory(
                     cst.TEST_PATH,
-                    target_size=(256, 256),
+                    target_size=(cst.MAX_HEIGHT, cst.MAX_WIDTH),
                     batch_size=BATCH_SIZE)
 
 
 val_datagen = DataGenerator(rescale=1./255)
 val_generator = val_datagen.flow_from_directory(
                     cst.VAL_PATH,
-                    target_size=(256, 256),
+                    target_size=(cst.MAX_HEIGHT, cst.MAX_WIDTH),
                     batch_size=BATCH_SIZE,
                     seed=1)
 
