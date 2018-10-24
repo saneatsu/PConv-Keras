@@ -1,6 +1,12 @@
 import os
 import sys
 from datetime import datetime
+import logging
+import traceback
+
+sys.path.append(os.pardir)
+
+import const as cst
 
 from keras.models import Model
 from keras.models import load_model
@@ -11,22 +17,18 @@ from keras.applications import VGG16
 from keras import backend as K
 from libs.pconv_layer import PConv2D
 
-sys.path.append(os.pardir)
-
-import const as cst
-
 
 class PConvUnet(object):
 
-    def __init__(self, img_rows=cst.MAX_HEIGHT, img_cols=cst.MAX_WIDTH, weight_filepath=None):
+    def __init__(self, img_rows=cst.CROP_HEIGHT, img_cols=cst.CROP_WIDTH, weight_filepath=None):
         """Create the PConvUnet. If variable image size, set img_rows and img_cols to None"""
         
         # Settings
         self.weight_filepath = weight_filepath
         self.img_rows = img_rows
         self.img_cols = img_cols
-        assert self.img_rows >= cst.MAX_HEIGHT, 'Height must be >=256 pixels'
-        assert self.img_cols >= cst.MAX_WIDTH, 'Width must be >=256 pixels'
+        assert self.img_rows >= cst.CROP_HEIGHT, 'Height must be >=256 pixels'
+        assert self.img_cols >= cst.CROP_WIDTH, 'Width must be >=256 pixels'
 
         # Set current epoch
         self.current_epoch = 0
@@ -62,7 +64,7 @@ class PConvUnet(object):
         
         return model
         
-    def build_pconv_unet(self, train_bn=True, lr=0.0002):
+    def build_pconv_unet(self, train_bn=True, lr=0.0002):      
 
         # INPUTS
         inputs_img = Input((self.img_rows, self.img_cols, 3))
@@ -194,27 +196,47 @@ class PConvUnet(object):
         param plot_callback: callback function taking Unet model as parameter
         """
         
+        filename = datetime.now().strftime("%Y%m%d_%H%M")
+        errlog_path = cst.ERRLOG_PATH + filename + '.csv'
+        print(errlog_path)
+        
         # Loop over epochs
         for _ in range(epochs):
-            # Fit the model
-            self.model.fit_generator(
-                generator,
-                epochs=self.current_epoch+1,
-                initial_epoch=self.current_epoch,
-                *args,
-                **kwargs
-            )
+            try:            
+                # Fit the model
+                self.model.fit_generator(
+                    generator,
+                    epochs=self.current_epoch+1,
+                    initial_epoch=self.current_epoch,
+                    *args, **kwargs
+                )
+            except Exception as e:
+                traceback_msg = traceback.format_exc()
+                error_time    = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+                
+                with open(errlog_path, 'a') as f:
+                    f.write('>>>' + error_time + '\n')
+                    f.write(str(traceback_msg) + '\n')
+                                               
+            try: 
+                # Update epoch 
+                self.current_epoch += 1
 
-            # Update epoch 
-            self.current_epoch += 1
-            
-            # After each epoch predict on test images & show them
-            if plot_callback:
-                plot_callback(self.model)
+                # After each epoch predict on test images & show them
+                if plot_callback:
+                    plot_callback(self.model)
 
-            # Save logfile
-            if self.weight_filepath:
-                self.save()
+                # Save logfile
+                if self.weight_filepath:
+                    self.save()
+            except Exception as e:
+                traceback_msg = traceback.format_exc()
+                error_time    = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+                
+                with open(errlog_path, 'a') as f:
+                    f.write('>>>' + error_time + '\n')
+                    f.write(str(traceback_msg) + '\n')
+
             
     def predict(self, sample):
         """Run prediction using this model"""
@@ -276,4 +298,4 @@ class PConvUnet(object):
         # Normalize with channels, height and width
         gram = gram /  K.cast(C * H * W, x.dtype)
         
-        return gram
+        return gram    
