@@ -13,6 +13,7 @@ import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import TensorBoard
 from keras import backend as K
+import keras 
 
 sys.path.append(os.pardir)
 
@@ -20,9 +21,9 @@ import const as cst
 from libs.pconv_model import PConvUnet
 from libs.util import random_mask
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-BATCH_SIZE = 8 # ResourceExhaustedError
+BATCH_SIZE = 3 # ResourceExhaustedError
 plt.ioff()
 
 class DataGenerator(ImageDataGenerator):      
@@ -56,6 +57,11 @@ class DataGenerator(ImageDataGenerator):
             ori = next(generator)
             ori_length = ori.shape[0]            
             crop_ori = self.random_crop(ori) 
+            
+#             print(crop_ori)
+#             print(type(crop_ori))           
+#             crop_new = np.uint8(crop_ori[0,:,:,:]*255)
+#             cv2.imwrite("/nfs/host/PConv-Keras/sample_images/crop_ori.jpg", crop_new[0])
 
             # Get masks for each image sample
             mask = np.stack([random_mask(crop_ori.shape[1], crop_ori.shape[2]) for _ in range(ori_length)], axis=0)
@@ -65,7 +71,7 @@ class DataGenerator(ImageDataGenerator):
             masked[mask == 0] = 1
 
             # Yield ([ori, masl],  ori) training batches
-            gc.collect()          
+            gc.collect()
                         
             yield [masked, mask], crop_ori
             
@@ -94,11 +100,12 @@ val_generator = val_datagen.flow_from_directory(
 
 
 model = PConvUnet(weight_filepath=cst.WEIGHT_PATH)
+
 model.fit(
     train_generator,
-    steps_per_epoch=100,
+    steps_per_epoch=7900//BATCH_SIZE,
     validation_data=val_generator,
-    validation_steps=500,
+    validation_steps=7900//BATCH_SIZE,
     epochs=100,
     plot_callback=None,
     callbacks=[

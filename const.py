@@ -3,8 +3,8 @@
 MAX_HEIGHT = 2688
 MAX_WIDTH  = 5376
 
-CROP_HEIGHT = 256 # 256, 512
-CROP_WIDTH  = 512 # 512, 1024
+CROP_HEIGHT = 512 # 256, 512
+CROP_WIDTH  = 1024 # 512, 1024
 
 MNT_PATH   = '/nfs/host/PConv-Keras'
 
@@ -20,4 +20,4 @@ TEST_PATH     = '{}/house-dataset/test-crop-256-512'.format(MNT_PATH)
 # data dir
 WEIGHT_PATH   = '{}/data/model/weight-crop-256-512/'.format(MNT_PATH)
 TFLOG_PATH    = '{}/data/model/tflogs'.format(MNT_PATH)
-ERRLOG_PATH   = '{}/data/'.format(MNT_PATH)
+ERRLOG_PATH   = '{}/error_log/'.format(MNT_PATH)
