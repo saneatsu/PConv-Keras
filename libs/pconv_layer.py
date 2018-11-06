@@ -6,10 +6,12 @@ from keras.layers import Conv2D
 
 
 class PConv2D(Conv2D):
+#     def __init__(self, n_channels=3, mono=False, filters, kernel_size, *args, **kwargs):
     def __init__(self, *args, n_channels=3, mono=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.input_spec = [InputSpec(ndim=4), InputSpec(ndim=4)]
-
+        
+        
     def build(self, input_shape):        
         """Adapted from original _Conv() layer of Keras        
         param input_shape: list of dimensions for [img, mask]
