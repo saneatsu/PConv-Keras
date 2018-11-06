@@ -45,6 +45,7 @@ class PConvUnet(object):
         self.vgg = self.build_vgg()
         
         # Create UNet-like model
+#         self.model = self.build_pconv_unet(lr = 0.0002 * 0.1)
         self.model = self.build_pconv_unet()
         
 
@@ -67,13 +68,11 @@ class PConvUnet(object):
             vgg.outputs = [vgg.layers[i].output for i in self.vgg_layers]
     
             # Create model and compile
-            cpu_model = Model(inputs=img, outputs=vgg(img))
-            
+            cpu_model = Model(inputs=img, outputs=vgg(img))            
             
         model = cpu_model#keras.utils.multi_gpu_model(cpu_model, gpus=4)
         model.trainable = False
-            
-        
+                    
         model.compile(loss='mse', optimizer='adam')
         
         return model
@@ -110,21 +109,21 @@ class PConvUnet(object):
             
             encoder_layer.counter = 0
         
-            e_conv1, e_mask1 = encoder_layer(inputs_img, inputs_mask, 64, 7, bn=False)
-            e_conv2, e_mask2 = encoder_layer(e_conv1, e_mask1, 128, 5)
-            e_conv3, e_mask3 = encoder_layer(e_conv2, e_mask2, 256, 5)
-            e_conv4, e_mask4 = encoder_layer(e_conv3, e_mask3, 256, 3)
-            e_conv5, e_mask5 = encoder_layer(e_conv4, e_mask4, 256, 3)
-            e_conv6, e_mask6 = encoder_layer(e_conv5, e_mask5, 256, 3)
-            e_conv7, e_mask7 = encoder_layer(e_conv6, e_mask6, 256, 3)
-            e_conv8, e_mask8 = encoder_layer(e_conv7, e_mask7, 256, 3)
-                
-            d_conv9, d_mask9 = decoder_layer(e_conv8, e_mask8, e_conv7, e_mask7, 256, 3)
-            d_conv10, d_mask10 = decoder_layer(d_conv9, d_mask9, e_conv6, e_mask6, 256, 3)
-            d_conv11, d_mask11 = decoder_layer(d_conv10, d_mask10, e_conv5, e_mask5, 256, 3)
-            d_conv12, d_mask12 = decoder_layer(d_conv11, d_mask11, e_conv4, e_mask4, 256, 3)
-            d_conv13, d_mask13 = decoder_layer(d_conv12, d_mask12, e_conv3, e_mask3, 256, 3)
-            d_conv14, d_mask14 = decoder_layer(d_conv13, d_mask13, e_conv2, e_mask2, 128, 3)
+            e_conv1, e_mask1 = encoder_layer(inputs_img, inputs_mask, 64, 7, bn=False) # 64
+            e_conv2, e_mask2 = encoder_layer(e_conv1, e_mask1, 128, 5) # 128
+            e_conv3, e_mask3 = encoder_layer(e_conv2, e_mask2, 256, 5) # 256
+            e_conv4, e_mask4 = encoder_layer(e_conv3, e_mask3, 256, 3) # 256
+            e_conv5, e_mask5 = encoder_layer(e_conv4, e_mask4, 256, 3) # 256
+            e_conv6, e_mask6 = encoder_layer(e_conv5, e_mask5, 256, 3) # 256
+            e_conv7, e_mask7 = encoder_layer(e_conv6, e_mask6, 256, 3) # 256
+            e_conv8, e_mask8 = encoder_layer(e_conv7, e_mask7, 256, 3) # 256
+            
+            d_conv9, d_mask9 = decoder_layer(e_conv8, e_mask8, e_conv7, e_mask7, 256, 3) # 256
+            d_conv10, d_mask10 = decoder_layer(d_conv9, d_mask9, e_conv6, e_mask6, 256, 3) # 256
+            d_conv11, d_mask11 = decoder_layer(d_conv10, d_mask10, e_conv5, e_mask5, 256, 3) # 256
+            d_conv12, d_mask12 = decoder_layer(d_conv11, d_mask11, e_conv4, e_mask4, 256, 3) # 256
+            d_conv13, d_mask13 = decoder_layer(d_conv12, d_mask12, e_conv3, e_mask3, 256, 3) # 256
+            d_conv14, d_mask14 = decoder_layer(d_conv13, d_mask13, e_conv2, e_mask2, 128, 3) # 128
             d_conv15, d_mask15 = decoder_layer(d_conv14, d_mask14, e_conv1, e_mask1, 64, 3)
             d_conv16, d_mask16 = decoder_layer(d_conv15, d_mask15, inputs_img, inputs_mask, 3, 3, bn=False)
             outputs = Conv2D(3, 1, activation = 'sigmoid')(d_conv16)        
@@ -223,7 +222,7 @@ class PConvUnet(object):
 #         while True: # For raise StopIteration()
         for _ in range(epochs):
             start = time.time()
-            print("Start        :" + str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            print("Start       :" + str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
             
             try:            
                 # Fit the model
@@ -234,7 +233,7 @@ class PConvUnet(object):
                     *args, **kwargs
                 )
             except Exception as e:
-                print('ERROR!')
+                print(e)
                 traceback_msg = traceback.format_exc()
                 error_time    = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
 
@@ -254,7 +253,7 @@ class PConvUnet(object):
                 if self.weight_filepath:
                     self.save()
             except Exception as e:
-                print('ERROR!')
+                print(e)
                 traceback_msg = traceback.format_exc()
                 error_time    = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
 
@@ -277,6 +276,9 @@ class PConvUnet(object):
 
     def save(self):        
         self.model.save_weights(self.current_weightfile())
+        
+    def load_weights(self, filepath):
+        self.model.load_weights(filepath)
 
     def load(self, filepath, train_bn=True, lr=0.0002):
 

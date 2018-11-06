@@ -45,32 +45,37 @@ for i in range(len(cst.ORIGINAL_PATH)):
                     continue
 
                 img = cv2.imread(str(onlyfiles[k]).replace('\\', '/'))
-                height, width, channels = img.shape
-                                                                       
-                # Get scaling factor
-                resized_img = img
+                resized_img = cv2.resize(img, (cst.RESIZE_WIDTH, cst.RESIZE_HEIGHT))
+#                 print(resized_img.shape)
                 
-                if(height != cst.MAX_HEIGHT or width != cst.MAX_WIDTH):
-                    scaling_factor = cst.MAX_HEIGHT / float(height)
-                    if cst.MAX_WIDTH / float(width) > scaling_factor: # Basically don't pass through here
-                        scaling_factor = cst.MAX_WIDTH / float(width)                                                
+#                 height, width, channels = img.shape
+                                                                       
+#                 # Get scaling factor
+#                 resized_img = img                
+#                 if(height != cst.MAX_HEIGHT or width != cst.MAX_WIDTH):
+#                     scaling_factor = cst.MAX_HEIGHT / float(height)
+#                     if cst.MAX_WIDTH / float(width) > scaling_factor: # Basically don't pass through here
+#                         scaling_factor = cst.MAX_WIDTH / float(width)                                                
 
-                    # Resize image(reduction)
-                    img = cv2.resize(img,
-                                     None,
-                                     fx=scaling_factor,
-                                     fy=scaling_factor,
-                                     interpolation=cv2.INTER_AREA)
-                    sh_height, sh_width, sh_channels = img.shape
-                    
-                    resized_img = img
-
-                params = list()
-                params.append(cv2.IMWRITE_PNG_COMPRESSION)
-                params.append(8)
+#                     # Resize image(reduction)
+#                     img = cv2.resize(img,
+#                                      None,
+#                                      fx=scaling_factor,
+#                                      fy=scaling_factor,
+#                                      interpolation=cv2.INTER_AREA)
+#                     sh_height, sh_width, sh_channels = img.shape                    
+#                     resized_img = img
+#                     
+#                 params = list()
+#                 params.append(cv2.IMWRITE_PNG_COMPRESSION)
+#                 params.append(8)
                 img_cnt += 1
                 img_file_name = cst.RESIZED_PATH[i] + \
                                 '/img_' + \
                                 '{0:07d}'.format(img_cnt) + \
                                 '.bmp'
-                cv2.imwrite(img_file_name, resized_img, params)
+#                 cv2.imwrite(img_file_name, resized_img, params)
+                cv2.imwrite(img_file_name, resized_img)
+
+    
+print('Finish')    
