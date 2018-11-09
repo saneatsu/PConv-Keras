@@ -9,6 +9,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from PIL import Image
 
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import TensorBoard
@@ -26,12 +27,32 @@ from libs.util import random_mask
 BATCH_SIZE = 7 # ResourceExhaustedError
 plt.ioff()
 
-class DataGenerator(ImageDataGenerator):      
+class DataGenerator(ImageDataGenerator):
     def __init__(self, random_crop_size=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         assert random_crop_size == None or len(random_crop_size) == 2
         self.random_crop_size = random_crop_size
+
+    def has_many_mask(self, mask):
+        height, width = mask.shape[0], mask.shape[1]
+        masked_pixels = []
+
+        for y in range(height):
+            for x in range(width):
+                if mask[y, x, 0] == 0: # 0: black
+                    masked_pixels.append(mask[y, x, 0])
+
+        # 512x512=262,144
+        min_thresh = cst.CROP_HEIGHT * cst.CROP_WIDTH * 0.3 # = 78,643.2
+        max_thresh = cst.CROP_HEIGHT * cst.CROP_WIDTH * 0.5 # = 13,1072
+
+        if len(masked_pixels) > min_thresh and len(masked_pixels) < max_thresh:
+            # print("==============")
+            return True
+
+        # print("Again")
+        return False
 
     def random_crop(self, ori, mask):
         assert ori.shape[3] == 3
@@ -39,50 +60,70 @@ class DataGenerator(ImageDataGenerator):
             raise ValueError(f"Invalid random_crop_size : original = {ori_img.shape}, crop_size = {self.random_crop_size}")
 
         height, width = ori.shape[1], ori.shape[2]
-        dy, dx = self.random_crop_size        
-        x = np.random.randint(0, width - dx + 1)
-        y = np.random.randint(0, height - dy + 1)
-        
-        croped_ori = ori[y:(y+dy), x:(x+dx), :]
-        croped_mask = mask[y:(y+dy), x:(x+dx), :]
-        
-        return croped_ori, croped_mask
+        dy, dx = self.random_crop_size
     
+        recrop_cnt = -1
+        while True:
+            recrop_cnt += 1
+            x = np.random.randint(0, width - dx + 1)
+            y = np.random.randint(0, height - dy + 1)
+
+            # Check ratio of mask
+            croped_ori = ori[:, y:(y+dy), x:(x+dx), :]
+            croped_mask = mask[:, y:(y+dy), x:(x+dx), :]
+            
+            if self.has_many_mask(croped_mask[0]):
+                break
+        
+        return croped_ori, croped_mask, recrop_cnt
+
     def flow_from_directory(self, directory, *args, **kwargs):
         generator = super().flow_from_directory(directory, class_mode=None, *args, **kwargs)
-        
+
+        # cnt = 0
+        recrop_cnt = 0
+
         # Data augmentation
         while True:
             # Get augmented image samples
             ori = next(generator)
-            ori_length = ori.shape[0]            
+            ori_length = ori.shape[0]
 
             # Get masks for each image sample
             mask = np.stack([random_mask(ori.shape[1], ori.shape[2]) for _ in range(ori_length)], axis=0)
-            
+
             # Crop ori, mask and masked images
-            croped_ori, croped_mask = self.random_crop(ori, mask)
+            croped_ori, croped_mask, recrop_cnt = self.random_crop(ori, mask)
+            recrop_cnt += recrop_cnt
 
             # Apply masks to all image sample
             masked = deepcopy(croped_ori)
-            masked[croped_mask == 0] = 1            
-            
+            masked[croped_mask == 0] = 1
+
             # Yield ([ori, masl],  ori) training batches
             gc.collect()
-                        
-            yield [masked, croped_mask], croped_ori
-            
 
-            
-#             print(crop_ori)
-#             print(type(crop_ori))           
-#             crop_new = np.uint8(crop_ori[0,:,:,:]*255)
-#             cv2.imwrite("/nfs/host/PConv-Keras/sample_images/crop_ori.jpg", crop_new[0])
-            
+            # Save croped images
+            # save_ori = Image.fromarray(np.uint8((ori[0,:,:,:] * 1.)*255))
+            # save_ori.save("/nfs/host/PConv-Keras/sample_images/{}_save_ori.jpg".format(cnt))
+            # save_mask = Image.fromarray(np.uint8((mask[0,:,:,:] * 1.)*255))
+            # save_mask.save("/nfs/host/PConv-Keras/sample_images/{}_save_mask.jpg".format(cnt))
+            # save_masked = Image.fromarray(np.uint8((masked[0,:,:,:] * 1.)*255))
+            # save_masked.save("/nfs/host/PConv-Keras/sample_images/{}_save_masked.jpg".format(cnt))
+            # save_croped_masked = Image.fromarray(np.uint8((croped_mask[0,:,:,:] * 1.)*255))
+            # save_croped_masked.save("/nfs/host/PConv-Keras/sample_images/{}_save_croped_masked.jpg".format(cnt))
+            # cnt += 1
+
+            yield [masked, croped_mask], croped_ori
+        
+        print("========")
+        print(recrop_cnt)
+
+
 print(cst.CROP_HEIGHT)
 print(cst.CROP_WIDTH)
 
-            
+
 train_datagen = DataGenerator(
                     rotation_range=20,
                     width_shift_range=0.2,
@@ -92,7 +133,7 @@ train_datagen = DataGenerator(
                     random_crop_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH))
 train_generator = train_datagen.flow_from_directory(
                     cst.TRAIN_PATH,
-                    target_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH),
+                    target_size=(cst.MAX_HEIGHT, cst.MAX_WIDTH),
                     batch_size=BATCH_SIZE)
 
 val_datagen = DataGenerator(
@@ -100,7 +141,7 @@ val_datagen = DataGenerator(
                     random_crop_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH))
 val_generator = val_datagen.flow_from_directory(
                     cst.VAL_PATH,
-                    target_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH),
+                    target_size=(cst.MAX_HEIGHT, cst.MAX_WIDTH),
                     batch_size=BATCH_SIZE,
                     seed=1)
 
@@ -127,7 +168,6 @@ model = PConvUnet(weight_filepath=cst.WEIGHT_PATH)
 # output_validator = keras.callbacks.LambdaCallback(on_epoch_begin = check_val_output_nan)
 
 
-# 8000
 model.fit(
     train_generator,
     steps_per_epoch=8000//BATCH_SIZE,
@@ -138,5 +178,5 @@ model.fit(
     callbacks=[
         TensorBoard(log_dir=cst.TFLOG_PATH, write_graph=False),
     ])
-        
+
 # $ tensorboard --logdir=/nfs/host/PConv-Keras/data/model/tflogs --port 8082

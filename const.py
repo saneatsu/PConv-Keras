@@ -1,12 +1,7 @@
 # NOTE: You need to check directory's permission
 
-<<<<<<< HEAD
-MAX_HEIGHT    = 2688
-MAX_WIDTH     = 5376
-=======
 MAX_HEIGHT = 1536 # 1536 # 1280 # 1024 # 2048 # 2688
 MAX_WIDTH  = 3072 # 3072 # 2560 # 2048 # 4096 # 5376
->>>>>>> 4d6d8e96a1efc993bc2509affdf7aeea373e06b6
 
 CROP_HEIGHT   = 512 # 256, 384, 512
 CROP_WIDTH    = 512 # 512, 768, 1024
@@ -18,9 +13,6 @@ MNT_PATH   = '/nfs/host/PConv-Keras'
 
 # house-dataset-src dir
 ORIGINAL_PATH = ['{}/house-dataset-src/original/'.format(MNT_PATH)] # 9317 imag bves
-    
-# house-dataset dir
-<<<<<<< HEAD
 RESIZED_PATH  = ['{}/house-dataset/resize-train-1536x3072/00'.format(MNT_PATH)]
 
 TRAIN_PATH    = '{}/house-dataset/resize-train-1536x3072'.format(MNT_PATH)
@@ -28,8 +20,8 @@ VAL_PATH      = '{}/house-dataset/resize-valid-1536x3072'.format(MNT_PATH)
 # TEST_PATH     = '{}/house-dataset/test-crop-256-512'.format(MNT_PATH)
 
 # data dir
-WEIGHT_PATH   = '{}/data/model/resize-1536x3072/weight-crop-512x512v2/'.format(MNT_PATH)
-TFLOG_PATH    = '{}/data/model/resize-1536x3072/tflogs-crop-512x512v2/'.format(MNT_PATH)
+WEIGHT_PATH   = '{}/data/model/resize-1536x3072/'.format(MNT_PATH)
+TFLOG_PATH    = '{}/data/model/resize-1536x3072/'.format(MNT_PATH)
 ERRLOG_PATH   = '{}/error_log/'.format(MNT_PATH)
 
 
@@ -66,13 +58,3 @@ drwxrwxrwx 1 root root  335872 Oct  9 12:29 resize-test-512x1024x1999/
 drwxrwxrwx 1 root root  339968 Oct  9 12:33 resize-valid-512x1024x1999/
 
 """
-=======
-TRAIN_PATH    = '/mnt/PConv-Keras/house-dataset/train-crop-256-512'
-VAL_PATH      = '/mnt/PConv-Keras/house-dataset/valid-crop-256-512'
-TEST_PATH     = '/mnt/PConv-Keras/house-dataset/test-crop-256-512'
-
-# data dir
-WEIGHT_PATH   = '{}/data/model/weight-crop-512-1024/'.format(MNT_PATH)
-TFLOG_PATH    = '{}/data/model/tflogs'.format(MNT_PATH)
-ERRLOG_PATH   = '{}/error_log/'.format(MNT_PATH)
->>>>>>> 4d6d8e96a1efc993bc2509affdf7aeea373e06b6
