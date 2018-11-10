@@ -10,7 +10,7 @@ def random_mask(height, width, channels=3):
 
     # Set size scale
     size = int((width + height) * 0.03)
-    if width < 64 or height < 64:
+    if width < 20 or height < 20:
         raise Exception("Width and Height of mask must be at least 64!")
     
     # Draw random lines
