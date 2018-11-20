@@ -41,9 +41,13 @@ def random_mask(height, width, channels=3):
     """Generates a random irregular mask with lines, circles and elipses"""    
     img = np.zeros((height, width, channels), np.uint8)
 
+<<<<<<< HEAD
     # Set s }ize scale
+=======
+    # size = int((width + height) * 0.03) # 4608*0.03=138
+>>>>>>> 936bb9b8a84f6e6784746d623147f392552b5d8e
     size = int((width + height) * 0.01)
-    if width < 64 or height < 64:
+    if width < 20 or height < 20:
         raise Exception("Width and Height of mask must be at least 64!")
     
     # Draw random lines

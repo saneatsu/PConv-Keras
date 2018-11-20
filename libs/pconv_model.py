@@ -281,6 +281,8 @@ class PConvUnet(object):
         self.model.save_weights(self.current_weightfile())
 
     def load(self, filepath, train_bn=True, lr=0.0002):
+        print(self.img_rows)
+        print(self.img_cols)
 
         # Create UNet-like model
         self.model = self.build_pconv_unet(train_bn, lr)
