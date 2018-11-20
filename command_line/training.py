@@ -43,15 +43,10 @@ class DataGenerator(ImageDataGenerator):
                 if mask[y, x, 0] == 0: # 0: black
                     masked_pixels.append(mask[y, x, 0])
 
-        # 512x512=262,144
-        min_thresh = cst.CROP_HEIGHT * cst.CROP_WIDTH * 0.3 # = 78,643.2
-        max_thresh = cst.CROP_HEIGHT * cst.CROP_WIDTH * 0.5 # = 13,1072
-
-        if len(masked_pixels) > min_thresh and len(masked_pixels) < max_thresh:
-            # print("==============")
+        if len(masked_pixels) != 0:
+            # print("Rate: " + str(len(masked_pixels)/262144*100)) # 512x512=262,144
             return True
 
-        # print("Again")
         return False
 
     def random_crop(self, ori, mask):
@@ -62,7 +57,7 @@ class DataGenerator(ImageDataGenerator):
         height, width = ori.shape[1], ori.shape[2]
         dy, dx = self.random_crop_size
     
-        recrop_cnt = -1
+        recrop_cnt = -1        
         while True:
             recrop_cnt += 1
             x = np.random.randint(0, width - dx + 1)
@@ -80,7 +75,7 @@ class DataGenerator(ImageDataGenerator):
     def flow_from_directory(self, directory, *args, **kwargs):
         generator = super().flow_from_directory(directory, class_mode=None, *args, **kwargs)
 
-        # cnt = 0
+        cnt = 0
         recrop_cnt = 0
 
         # Data augmentation
@@ -112,12 +107,12 @@ class DataGenerator(ImageDataGenerator):
             # save_masked.save("/nfs/host/PConv-Keras/sample_images/{}_save_masked.jpg".format(cnt))
             # save_croped_masked = Image.fromarray(np.uint8((croped_mask[0,:,:,:] * 1.)*255))
             # save_croped_masked.save("/nfs/host/PConv-Keras/sample_images/{}_save_croped_masked.jpg".format(cnt))
-            # cnt += 1
+            
+            cnt += 1
 
             yield [masked, croped_mask], croped_ori
         
-        print("========")
-        print(recrop_cnt)
+        
 
 
 print(cst.CROP_HEIGHT)
