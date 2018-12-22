@@ -22,10 +22,11 @@ import const as cst
 from libs.pconv_model import PConvUnet
 from libs.util import random_mask
 
-#os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1, 2'
-
-BATCH_SIZE = 7 # ResourceExhaustedError
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+BATCH_SIZE = 4 # ResourceExhaustedError
 plt.ioff()
+
+print(BATCH_SIZE)
 
 class DataGenerator(ImageDataGenerator):
     def __init__(self, random_crop_size=None, *args, **kwargs):
@@ -111,13 +112,9 @@ class DataGenerator(ImageDataGenerator):
             cnt += 1
 
             yield [masked, croped_mask], croped_ori
-        
-        
-
-
+                
 print(cst.CROP_HEIGHT)
 print(cst.CROP_WIDTH)
-
 
 train_datagen = DataGenerator(
                     rotation_range=20,
@@ -131,6 +128,16 @@ train_generator = train_datagen.flow_from_directory(
                     target_size=(cst.MAX_HEIGHT, cst.MAX_WIDTH),
                     batch_size=BATCH_SIZE)
 
+# for d in train_generator:
+#     import numpy as np    
+    
+#     np_array = np.array(d[1], dtype=np.float64) # (27, 256, 256, 3)
+#     new_np_array = np.uint8(np_array[0, :, :, :]*255)
+#     output_img = cv2.cvtColor(new_np_array, cv2.COLOR_BGR2RGB)
+#     cv2.imwrite("/nfs/host/PConv-Keras/sample_images/debug_MAX.jpg", output_img)
+#     break
+
+    
 val_datagen = DataGenerator(
                     rescale=1./255,
                     random_crop_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH))
@@ -142,7 +149,7 @@ val_generator = val_datagen.flow_from_directory(
 
 model = PConvUnet(weight_filepath=cst.WEIGHT_PATH)
 
-# model.load_weights('/nfs/host/PConv-Keras/data/model/weight-crop-512-1024/1_weights_2018-10-27-05-22-52.h5') # BUG
+# model.load_weights('/nfs/host/PConv-Keras/data/model/resize-1536x3072/weight-crop-256x256-batch-30/100_weights_2018-12-15-19-02-33.h5') # BUG
 
 # for layer in model.model.layers:
 #     weights = layer.get_weights()
@@ -162,13 +169,12 @@ model = PConvUnet(weight_filepath=cst.WEIGHT_PATH)
 
 # output_validator = keras.callbacks.LambdaCallback(on_epoch_begin = check_val_output_nan)
 
-
 model.fit(
     train_generator,
     steps_per_epoch=8000//BATCH_SIZE,
     validation_data=val_generator,
     validation_steps=8000//BATCH_SIZE,
-    epochs=100,
+    epochs=300,
     plot_callback=None,
     callbacks=[
         TensorBoard(log_dir=cst.TFLOG_PATH, write_graph=False),

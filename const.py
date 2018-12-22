@@ -1,7 +1,7 @@
 # NOTE: You need to check directory's permission
 
-MAX_HEIGHT = 32 # 1536 # 768 # 1280 # 1024 # 2048 # 2688
-MAX_WIDTH  = 32 # 3072 # 1536 # 2560 # 2048 # 4096 # 5376
+MAX_HEIGHT = 1536 # 1536 # 768 # 1280 # 1024 # 2048 # 2688
+MAX_WIDTH  = 3072 # 3072 # 1536 # 2560 # 2048 # 4096 # 5376
 
 CROP_HEIGHT   = 512 # 256, 384, 512
 CROP_WIDTH    = 512 # 512, 768, 1024
@@ -20,8 +20,8 @@ VAL_PATH      = '{}/house-dataset/resize-valid-1536x3072'.format(MNT_PATH)
 # TEST_PATH     = '{}/house-dataset/test-crop-256-512'.format(MNT_PATH)
 
 # data dir
-WEIGHT_PATH   = '{}/data/model/resize-1536x3072/weight-crop-512x512_exclude_nomask'.format(MNT_PATH)
-TFLOG_PATH    = '{}/data/model/resize-1536x3072/tflogs-crop-512x512_exclude_nomask'.format(MNT_PATH)
+WEIGHT_PATH   = '{}/data/model/resize-1536x3072/weight_512x512_GPU-4_Batch-4/'.format(MNT_PATH)
+TFLOG_PATH    = '{}/data/model/resize-1536x3072/tflogs_512x512_GPU-4_Batch-4'.format(MNT_PATH)
 ERRLOG_PATH   = '{}/error_log/'.format(MNT_PATH)
 
 
