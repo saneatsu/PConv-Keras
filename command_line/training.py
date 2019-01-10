@@ -23,7 +23,7 @@ from libs.pconv_model import PConvUnet
 from libs.util import random_mask
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-BATCH_SIZE = 27 # ResourceExhaustedError
+BATCH_SIZE = 7 # ResourceExhaustedError
 plt.ioff()
 
 print(BATCH_SIZE)
@@ -38,7 +38,23 @@ class DataGenerator(ImageDataGenerator):
 
         assert random_crop_size == None or len(random_crop_size) == 2
         self.random_crop_size = random_crop_size
-    
+        
+    def has_many_mask(self, mask):
+        height, width = mask.shape[0], mask.shape[1]
+        masked_pixels = []
+
+        for y in range(height):
+            for x in range(width):
+                if mask[y, x, 0] == 0: # 0: black
+                    masked_pixels.append(mask[y, x, 0])
+
+        if len(masked_pixels) != 0:
+            print("")
+            print(str(len(masked_pixels)/262144*100)) # 512x512=262,144
+            return True
+
+        return False
+            
     def random_crop(self, ori):
         assert ori.shape[3] == 3
         if ori.shape[1] < self.random_crop_size[0] or ori.shape[2] < self.random_crop_size[1]:
@@ -47,12 +63,18 @@ class DataGenerator(ImageDataGenerator):
         height, width = ori.shape[1], ori.shape[2]
         dy, dx = self.random_crop_size
             
-        x = np.random.randint(0, width-dx+1)
-        y = np.random.randint(0, height-dy+1)
+        while True:
+            x = np.random.randint(0, width - dx + 1)
+            y = np.random.randint(0, height - dy + 1)
 
-        croped_ori = ori[:, y:(y+dy), x:(x+dx), :]
+            # Check ratio of mask
+            croped_ori = ori[:, y:(y+dy), x:(x+dx), :]
+            croped_mask = mask[:, y:(y+dy), x:(x+dx), :]
+            
+            if self.has_many_mask(croped_mask[0]):
+                break
         
-        return croped_ori
+        return croped_ori, croped_mask
 
     def flow_from_directory(self, directory, *args, **kwargs):
         generator = super().flow_from_directory(directory, class_mode=None, *args, **kwargs)
@@ -79,13 +101,13 @@ class DataGenerator(ImageDataGenerator):
             gc.collect()
 
             # Save croped images
-#             save_mask = Image.fromarray(np.uint8((mask[0,:,:,:] * 1.)*255))
-#             save_mask.save("/nfs/host/PConv-Keras/sample_images/{}_mask.jpg".format(cnt))
-#             save_masked = Image.fromarray(np.uint8((masked[0,:,:,:] * 1.)*255))
-#             save_masked.save("/nfs/host/PConv-Keras/sample_images/{}_masked.jpg".format(cnt))
+            save_mask = Image.fromarray(np.uint8((mask[0,:,:,:] * 1.)*255))
+            save_mask.save("/nfs/host/PConv-Keras/sample_images/{}_mask.jpg".format(cnt))
+            save_masked = Image.fromarray(np.uint8((masked[0,:,:,:] * 1.)*255))
+            save_masked.save("/nfs/host/PConv-Keras/sample_images/{}_masked.jpg".format(cnt))
 #             save_croped_ori = Image.fromarray(np.uint8((croped_ori[0,:,:,:] * 1.)*255))
 #             save_croped_ori.save("/nfs/host/PConv-Keras/sample_images/{}_croped_ori.jpg".format(cnt))
-#             print('save')
+            print('save')
             
             cnt += 1
 
@@ -127,7 +149,7 @@ val_generator = val_datagen.flow_from_directory(
 
 model = PConvUnet(weight_filepath=cst.WEIGHT_PATH)
 
-# model.load_weights('/nfs/host/PConv-Keras/data/model/resize-1536x3072/weight_256x256_GPU-4_Batch-27_Mask-Circle/7_weights_2018-12-24-13-53-30.h5') # BUG
+# model.load_weights('/nfs/host/PConv-Keras/data/model/resize-1535x3072/weight_256x256_GPU-4_Batch-27_Mask-Circle/60_weights_2019-01-04-07-06-58.h5') # BUG
 
 # for layer in model.model.layers:
 #     weights = layer.get_weights()
