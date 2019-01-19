@@ -20,8 +20,8 @@ VAL_PATH      = '{}/house-dataset/resize-valid-1536x3072'.format(MNT_PATH)
 # TEST_PATH     = '{}/house-dataset/test-crop-256-512'.format(MNT_PATH)
 
 # data dir
-WEIGHT_PATH   = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mask-GraduallyIncrease/weight/'.format(MNT_PATH)
-TFLOG_PATH    = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mask-GraduallyIncrease/tflogs'.format(MNT_PATH)
+WEIGHT_PATH   = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mask-Margin50/weight/'.format(MNT_PATH)
+TFLOG_PATH    = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mask-Margin50/tflogs'.format(MNT_PATH)
 ERRLOG_PATH   = '{}/error_log/'.format(MNT_PATH)
 
 

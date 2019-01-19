@@ -46,14 +46,20 @@ class DataGenerator(ImageDataGenerator):
         for y in range(height):
             for x in range(width):
                 if mask[y, x, 0] == 0: # 0: black
-                    masked_pixels.append(mask[y, x, 0])
+                    masked_pixels.append(mask[y, x, 0])                    
+                    
+        mask_rate = len(masked_pixels)/262144*100
+        print("")
+        print(str(len(masked_pixels)/262144*100)) # 512x512=262,144
 
-        if len(masked_pixels) != 0:
-            print("")
-            print(str(len(masked_pixels)/262144*100)) # 512x512=262,144
-            return True
+        if mask_rate < 1:
+            return False
+        
+        return True
 
-        return False
+        # if len(masked_pixels) != 0:
+        #    return True
+        # return False
             
     def random_crop(self, ori):
         assert ori.shape[3] == 3
@@ -62,19 +68,37 @@ class DataGenerator(ImageDataGenerator):
 
         height, width = ori.shape[1], ori.shape[2]
         dy, dx = self.random_crop_size
-            
-        while True:
-            x = np.random.randint(0, width - dx + 1)
-            y = np.random.randint(0, height - dy + 1)
+                    
+        # while True:
+        x = np.random.randint(0, width - dx - 1)
+        y = np.random.randint(0, height - dy - 1)
 
-            # Check ratio of mask
-            croped_ori = ori[:, y:(y+dy), x:(x+dx), :]
-            croped_mask = mask[:, y:(y+dy), x:(x+dx), :]
+        # Check ratio of mask
+        croped_ori = ori[:, y:(y+dy), x:(x+dx), :]
+        # croped_mask = mask[:, y:(y+dy), x:(x+dx), :]
+
+        # if self.has_many_mask(croped_mask[0]):
+        #    break
             
-            if self.has_many_mask(croped_mask[0]):
-                break
+        return croped_ori
+    
+    def save_img(cnt, mask=None, masked=None, croped_ori=None, croped_mask=None):
+        save_dir = '/nfs/host/PConv-Keras/sample_images/'
         
-        return croped_ori, croped_mask
+        if mask:
+            save_mask = Image.fromarray(np.uint8((mask[0,:,:,:] * 1.)*255))
+            save_mask.save("{}_mask.jpg".format(save_dir, cnt))
+        if masked:
+            save_masked = Image.fromarray(np.uint8((masked[0,:,:,:] * 1.)*255))
+            save_masked.save("{}_masked.jpg".format(save_dir, cnt))
+        if croped_ori:
+            save_croped_ori = Image.fromarray(np.uint8((croped_ori[0,:,:,:] * 1.)*255))
+            save_croped_ori.save("{}_croped_ori.jpg".format(save_dir, cnt))                    
+        if croped_mask:
+            save_croped_masked = Image.fromarray(np.uint8((croped_mask[0,:,:,:] * 1.)*255))
+            save_croped_masked.save("{}_save_croped_masked.jpg".format(save_dir, cnt))
+            
+        print('Save')
 
     def flow_from_directory(self, directory, *args, **kwargs):
         generator = super().flow_from_directory(directory, class_mode=None, *args, **kwargs)
@@ -82,92 +106,69 @@ class DataGenerator(ImageDataGenerator):
         cnt=0
 
         # Data augmentation
-        while True:            
+        while True:                   
             # Get augmented image samples
             ori = next(generator)
-            
+            ori_length = ori.shape[0]
+
             # Crop ori images
             croped_ori = self.random_crop(ori)
             croped_ori_length = croped_ori.shape[0]
 
             # Get masks for each image sample
-            mask = np.stack([random_mask(croped_ori.shape[1], croped_ori.shape[2]) for _ in range(croped_ori_length)], axis=0)            
-            
+            mask = np.stack([random_mask(croped_ori.shape[1], croped_ori.shape[2]) for _ in range(croped_ori_length)], axis=0)           
+
+            # Crop ori, mask and masked images
+            # croped_ori, croped_mask = self.random_crop(ori, mask)
+
             # Apply masks to all image sample
             masked = deepcopy(croped_ori)
-            masked[mask == 0] = 1                        
+            masked[mask == 0] = 1
 
             # Yield ([ori, masl],  ori) training batches
-            gc.collect()
+            gc.collect()        
+            
+#             self.has_many_mask(mask[0,:,:,:])
 
-            # Save croped images
-            save_mask = Image.fromarray(np.uint8((mask[0,:,:,:] * 1.)*255))
-            save_mask.save("/nfs/host/PConv-Keras/sample_images/{}_mask.jpg".format(cnt))
-            save_masked = Image.fromarray(np.uint8((masked[0,:,:,:] * 1.)*255))
-            save_masked.save("/nfs/host/PConv-Keras/sample_images/{}_masked.jpg".format(cnt))
-#             save_croped_ori = Image.fromarray(np.uint8((croped_ori[0,:,:,:] * 1.)*255))
-#             save_croped_ori.save("/nfs/host/PConv-Keras/sample_images/{}_croped_ori.jpg".format(cnt))
-            print('save')
+            # self.save_img(cnt=cnt, mask=mask, masked=masked) 
             
             cnt += 1
 
             yield [masked, mask], croped_ori
-                
+
+print(cst.MAX_HEIGHT)
+print(cst.MAX_WIDTH)            
 print(cst.CROP_HEIGHT)
 print(cst.CROP_WIDTH)
 
 train_datagen = DataGenerator(
-                    rotation_range=20,
-                    width_shift_range=0.2,
-                    height_shift_range=0.2,
-                    rescale=1./255,
-                    horizontal_flip=True,
-                    random_crop_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH))
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    rescale=1./255,
+    horizontal_flip=True,
+    random_crop_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH)
+)
 train_generator = train_datagen.flow_from_directory(
-                    cst.TRAIN_PATH,
-                    target_size=(cst.MAX_HEIGHT, cst.MAX_WIDTH),
-                    batch_size=BATCH_SIZE)
-
-# for d in train_generator:
-#     import numpy as np    
-    
-#     np_array = np.array(d[1], dtype=np.float64) # (27, 256, 256, 3)
-#     new_np_array = np.uint8(np_array[0, :, :, :]*255)
-#     output_img = cv2.cvtColor(new_np_array, cv2.COLOR_BGR2RGB)
-#     cv2.imwrite("/nfs/host/PConv-Keras/sample_images/debug_MAX.jpg", output_img)
-#     break
-
+    cst.TRAIN_PATH,
+    target_size=(cst.MAX_HEIGHT, cst.MAX_WIDTH),
+    batch_size=BATCH_SIZE
+)
     
 val_datagen = DataGenerator(
-                    rescale=1./255,
-                    random_crop_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH))
+    rescale=1./255,
+    random_crop_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH)
+)
 val_generator = val_datagen.flow_from_directory(
-                    cst.VAL_PATH,
-                    target_size=(cst.MAX_HEIGHT, cst.MAX_WIDTH),
-                    batch_size=BATCH_SIZE,
-                    seed=1)
+    cst.VAL_PATH,
+    target_size=(cst.MAX_HEIGHT, cst.MAX_WIDTH),
+    batch_size=BATCH_SIZE,
+    seed=1
+)
 
 model = PConvUnet(weight_filepath=cst.WEIGHT_PATH)
 
-# model.load_weights('/nfs/host/PConv-Keras/data/model/resize-1535x3072/weight_256x256_GPU-4_Batch-27_Mask-Circle/60_weights_2019-01-04-07-06-58.h5') # BUG
-
-# for layer in model.model.layers:
-#     weights = layer.get_weights()
-#     for weight in weights:
-#         if np.any(np.isnan(weight)):
-#             print(layer.name)
-#             print(weights)
-
-# def check_val_output_nan(*args, **kwargs):
-#     val_generator = train_datagen.flow_from_directory(
-#                     cst.TRAIN_PATH,
-#                     target_size=(cst.CROP_HEIGHT, cst.CROP_WIDTH),
-#                     batch_size=BATCH_SIZE)
-#     val_ret = model.model.predict_generator(val_generator, steps = 2)
-#     print(val_ret)
-#     print(np.any(np.isnan(val_ret)))
-
-# output_validator = keras.callbacks.LambdaCallback(on_epoch_begin = check_val_output_nan)
+# model.load_weights('/nfs/host/PConv-Keras/data/model/resize-1535x3072/weight_256x256_GPU-4_Batch-27_Mask-Circle/60_weights_2019-01-04-07-06-58.h5')
 
 model.fit(
     train_generator,
