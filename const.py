@@ -19,9 +19,17 @@ TRAIN_PATH    = '{}/house-dataset/resize-train-1536x3072'.format(MNT_PATH)
 VAL_PATH      = '{}/house-dataset/resize-valid-1536x3072'.format(MNT_PATH)
 # TEST_PATH     = '{}/house-dataset/test-crop-256-512'.format(MNT_PATH)
 
+# For mix training
+TRAIN_SMALL_SIZE = '{}/house-dataset/resize-train-512x1024'.format(MNT_PATH)
+TRAIN_MEDIUM_SIZE = '{}/house-dataset/resize-train-768x1536'.format(MNT_PATH)
+TRAIN_LARGE_SIZE = '{}/house-dataset/resize-train-1536x3072'.format(MNT_PATH)
+VALID_SMALL_SIZE = '{}/house-dataset/resize-valid-512x1024'.format(MNT_PATH)
+VALID_MEDIUM_SIZE = '{}/house-dataset/resize-valid-768x1536'.format(MNT_PATH)
+VALID_LARGE_SIZE = '{}/house-dataset/resize-valid-1536x3072'.format(MNT_PATH)     
+
 # data dir
-WEIGHT_PATH   = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mask-Margin50/weight/'.format(MNT_PATH)
-TFLOG_PATH    = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mask-Margin50/tflogs'.format(MNT_PATH)
+WEIGHT_PATH   = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mix-1/weight/'.format(MNT_PATH)
+TFLOG_PATH    = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mix-1/tflogs'.format(MNT_PATH)
 ERRLOG_PATH   = '{}/error_log/'.format(MNT_PATH)
 
 
