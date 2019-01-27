@@ -15,6 +15,8 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import TensorBoard
 from keras import backend as K
 import keras
+import imgaug as ia
+from imgaug import augmenters as iaa
 
 sys.path.append(os.pardir)
 
@@ -24,7 +26,8 @@ from libs.util import random_mask
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-BATCH_SIZE = 7 # ResourceExhaustedError
+ia.seed(1)
+BATCH_SIZE = 4 # ResourceExhaustedError
 plt.ioff()
 
 print('=================================================================')
@@ -105,7 +108,7 @@ class DataGenerator(ImageDataGenerator):
         return croped_ori, croped_mask
     
     def save_img(self, cnt, img_size_type, mask=None, masked=None, croped_ori=None, croped_mask=None, ori=None):
-        save_dir = '/nfs/host/PConv-Keras/sample_images'
+        save_dir = '{}/sample_images'.format(cst.MNT_PATH)
         
         if mask is not None:
             save_mask = Image.fromarray(np.uint8((mask[0,:,:,:] * 1.)*255))
@@ -174,9 +177,15 @@ class DataGenerator(ImageDataGenerator):
             #
             # Get augmented image samples
             #
-            ori = next(generator)
-            ori_length = ori.shape[0]
-                                
+            ori_img = next(generator)*255
+            ori_length = ori_img.shape[0]
+
+            # Change color tone for data augmentation using imgaug
+            seq = iaa.Sequential([
+                iaa.Add((-20, 20), per_channel=True),
+            ])
+            ori = seq.augment_images(ori_img)/255
+
             #
             # Create images for training
             # 
@@ -214,7 +223,7 @@ class DataGenerator(ImageDataGenerator):
             # self.has_many_mask(croped_mask[0,:,:,:])
             
             # Save images
-            # self.save_img(cnt=cnt, img_size_type=img_size_type, mask=mask, masked=masked, ori=ori)
+            # self.save_img(cnt=cnt, img_size_type=img_size_type, masked=masked, croped_ori=croped_ori, ori=ori_img/255)
             # cnt += 1
 
             yield [masked, croped_mask], croped_ori

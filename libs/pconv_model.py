@@ -133,7 +133,7 @@ class PConvUnet(object):
         
             cpu_model = Model(inputs=[inputs_img, inputs_mask], outputs=outputs)
             
-        model = keras.utils.multi_gpu_model(cpu_model, gpus=4)
+        model = keras.utils.multi_gpu_model(cpu_model, gpus=2)
 
         # Compile the model
         model.compile(
