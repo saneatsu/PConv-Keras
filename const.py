@@ -26,7 +26,49 @@ VALID_SMALL_SIZE = '{}/house-dataset/resize-valid-512x1024'.format(MNT_PATH)
 VALID_MEDIUM_SIZE = '{}/house-dataset/resize-valid-768x1536'.format(MNT_PATH)
 VALID_LARGE_SIZE = '{}/house-dataset/resize-valid-1536x3072'.format(MNT_PATH)     
 
+<<<<<<< HEAD
 # Save dir
 WEIGHT_PATH   = '{}/data/model/resize-1536x3072/512x512_GPU-2_Batch-4_Aug-ColorTone/weight/'.format(MNT_PATH)
 TFLOG_PATH    = '{}/data/model/resize-1536x3072/512x512_GPU-2_Batch-4_Aug-ColorTone/tflogs'.format(MNT_PATH)
 ERRLOG_PATH   = '{}/error_log/'.format(MNT_PATH)
+=======
+# data dir
+WEIGHT_PATH   = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mix-2/weight/'.format(MNT_PATH)
+TFLOG_PATH    = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mix-2/tflogs'.format(MNT_PATH)
+ERRLOG_PATH   = '{}/error_log/'.format(MNT_PATH)
+
+
+"""
+# 128x256
+weight-crop-128x256
+tflogs-crop-128x256
+
+# 256x512
+{}/data/model/weight-resize-1536x3072/weight-256x512
+
+"""
+
+"""
+saneatsu@X99GPU /n/h/PConv-Keras> ls house-dataset -l
+total 2016
+
+#
+# Original images
+#
+drwxrwxrwx 1 root root       0 Oct 18 12:18 ori-train-5376x2688x7922/
+drwxrwxrwx 1 root root       0 Oct 18 12:19 ori-valid-5376x2688x844/
+drwxrwxrwx 1 root root       0 Oct 18 12:18 ori-test-5376x2688x3/
+
+#
+# Resized images
+#
+drwxrwxrwx 1 root root       0 Oct  9 17:26 resize-test-256x512x3/
+drwxrwxrwx 1 root root       0 Oct  9 17:26 resize-train-256x512x5/
+drwxrwxrwx 1 root root       0 Oct  9 17:26 resize-valid-256x512x5/
+
+drwxrwxrwx 1 root root 1388544 Oct  9 12:31 resize-train-512x1024x7999/
+drwxrwxrwx 1 root root  335872 Oct  9 12:29 resize-test-512x1024x1999/
+drwxrwxrwx 1 root root  339968 Oct  9 12:33 resize-valid-512x1024x1999/
+
+"""
+>>>>>>> 816a4683a321d24fca421535e0a621135ea6148e
