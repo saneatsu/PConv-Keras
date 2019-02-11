@@ -59,43 +59,24 @@ class DataGenerator(ImageDataGenerator):
         self.random_crop_size = random_crop_size
         
     def has_many_white(self, cnt, masked):
-        height, width = masked.shape[1], masked.shape[2]
-        white_pixels = []
-        _, thresh = cv2.threshold(np.uint8((masked[0,:,:,:] * 1.)*255), 230, 255,cv2.THRESH_BINARY)
-        print('-------------------')
-        print(cnt)
-        
-        # 全チャンネル200以上
-        
-                       
-        #
-        # Calculate
-        #
-        for y in range(height):
-            for x in range(width):
-                if thresh[y, x, 0] == 255: # 1: white
-                    white_pixels.append(thresh[y, x, 0])
+        """
+        各チャンネルが全て200以上だった場合、白色が多すぎると判定
+        """
+        masked = np.uint8((masked[0,:,:,:] * 1.)*255)
+        white_cnt = 0
+        for i in range(masked.shape[0]): # 512
+            for j in range(masked.shape[1]): # 512
+                if masked[i,j,0] >= 200 and masked[i,j,1] >= 200 and masked[i,j,2] >= 200:
                     white_cnt += 1
+        white_rate = white_cnt/262144*100 # white_cntのMAXは512x512=262,144
 
-        white_rate = len(white_pixels)/262144*100 # 262,144=512x512
-        print(white_rate)
-        
-        #
-        # Save image
-        #
-        save_dir = '/nfs/host/PConv-Keras/sample_images'
+        # save_dir = '/nfs/host/PConv-Keras/sample_images'
+        # save_mask = Image.fromarray(masked)
+        # save_mask.save("{}/{}_masked_{}.jpg".format(save_dir, cnt, white_rate))
 
-        save_thresh = Image.fromarray(thresh)
-        save_thresh.save("{}/{}_thresh_{}.jpg".format(save_dir, cnt, white_rate))
-        
-        save_mask = Image.fromarray(np.uint8((masked[0,:,:,:] * 1.)*255))
-        save_mask.save("{}/{}_masked_{}.jpg".format(save_dir, cnt, white_rate))
-
-        if white_rate > 50: 
-            # 半分以上は白色が多すぎると判断しマスクをしなおし
-            print('Too white')
+        if white_rate > 50: # 50%以上が白色判定された場合
             return True
-
+        
         return False
         
     def has_many_mask(self, mask):
@@ -243,7 +224,7 @@ class DataGenerator(ImageDataGenerator):
                     ) for _ in range(ori_length)
                 ],
                 axis=0
-            )           
+            )
             
             # Crop ori, mask and masked images
             croped_ori, croped_mask = self.random_crop(ori=ori, mask=mask)
@@ -252,7 +233,9 @@ class DataGenerator(ImageDataGenerator):
             masked = deepcopy(croped_ori)
             masked[croped_mask == 0] = 1
             
-            result = self.has_many_white(cnt, masked)
+            # 白色が50%以上ある場合はやり直し
+            if self.has_many_white(cnt, masked):
+                continue
 
             # Yield ([ori, masl],  ori) training batches
             gc.collect()        
@@ -260,14 +243,11 @@ class DataGenerator(ImageDataGenerator):
             #
             # Optional
             #
-            
             # Check mask ratio
             # self.has_many_mask(croped_mask[0,:,:,:])
             
             # Save images
-            # Validationの画像を保存する
-#             if directory_small==cst.VALID_SMALL_SIZE:                
-#                 self.save_img(cnt=cnt, img_size_type=img_size_type, mask=mask, masked=masked, ori=ori)
+            # self.save_img(cnt=cnt, img_size_type=img_size_type, mask=mask, masked=masked, ori=ori)
                 
             cnt += 1
 
