@@ -58,6 +58,46 @@ class DataGenerator(ImageDataGenerator):
         assert random_crop_size == None or len(random_crop_size) == 2
         self.random_crop_size = random_crop_size
         
+    def has_many_white(self, cnt, masked):
+        height, width = masked.shape[1], masked.shape[2]
+        white_pixels = []
+        _, thresh = cv2.threshold(np.uint8((masked[0,:,:,:] * 1.)*255), 230, 255,cv2.THRESH_BINARY)
+        print('-------------------')
+        print(cnt)
+        
+        # 全チャンネル200以上
+        
+                       
+        #
+        # Calculate
+        #
+        for y in range(height):
+            for x in range(width):
+                if thresh[y, x, 0] == 255: # 1: white
+                    white_pixels.append(thresh[y, x, 0])
+                    white_cnt += 1
+
+        white_rate = len(white_pixels)/262144*100 # 262,144=512x512
+        print(white_rate)
+        
+        #
+        # Save image
+        #
+        save_dir = '/nfs/host/PConv-Keras/sample_images'
+
+        save_thresh = Image.fromarray(thresh)
+        save_thresh.save("{}/{}_thresh_{}.jpg".format(save_dir, cnt, white_rate))
+        
+        save_mask = Image.fromarray(np.uint8((masked[0,:,:,:] * 1.)*255))
+        save_mask.save("{}/{}_masked_{}.jpg".format(save_dir, cnt, white_rate))
+
+        if white_rate > 50: 
+            # 半分以上は白色が多すぎると判断しマスクをしなおし
+            print('Too white')
+            return True
+
+        return False
+        
     def has_many_mask(self, mask):
         height, width = mask.shape[0], mask.shape[1]
         masked_pixels = []
@@ -68,6 +108,7 @@ class DataGenerator(ImageDataGenerator):
                     masked_pixels.append(mask[y, x, 0])                    
                     
         if len(masked_pixels) != 0:
+            # 白地に黒色のマスクが一つも無い→クロップ処理やり直し
             return True
         
         mask_rate = len(masked_pixels)/262144*100 # 262,144=512x512
@@ -112,21 +153,21 @@ class DataGenerator(ImageDataGenerator):
         
         if mask is not None:
             save_mask = Image.fromarray(np.uint8((mask[0,:,:,:] * 1.)*255))
-            save_mask.save("{}/{}_mask({}).jpg".format(save_dir, cnt, img_size_type))
+            save_mask.save("{}/{}_valid-mask({}).jpg".format(save_dir, cnt, img_size_type))
         if masked is not None:
             save_masked = Image.fromarray(np.uint8((masked[0,:,:,:] * 1.)*255))
-            save_masked.save("{}/{}_masked({}).jpg".format(save_dir, cnt, img_size_type))
+            save_masked.save("{}/{}_valid-masked({}).jpg".format(save_dir, cnt, img_size_type))
         if croped_ori is not None:
             save_croped_ori = Image.fromarray(np.uint8((croped_ori[0,:,:,:] * 1.)*255))
-            save_croped_ori.save("{}/{}_croped_ori({}).jpg".format(save_dir, cnt, img_size_type))                    
+            save_croped_ori.save("{}/{}_valid-croped_ori({}).jpg".format(save_dir, cnt, img_size_type))                    
         if croped_mask is not None:
             save_croped_masked = Image.fromarray(np.uint8((croped_mask[0,:,:,:] * 1.)*255))
-            save_croped_masked.save("{}/{}_croped_masked({}).jpg".format(save_dir, cnt, img_size_type))
+            save_croped_masked.save("{}/{}_valid-croped_masked({}).jpg".format(save_dir, cnt, img_size_type))
         if ori is not None:
             save_ori = Image.fromarray(np.uint8((ori[0,:,:,:] * 1.)*255))
             save_ori.save("{}/{}_ori({}).jpg".format(save_dir, cnt, img_size_type))
             
-        # print('Save')
+        print('Save')
 
     def flow_from_directory(self, directory_small, directory_medium, directory_large, *args, **kwargs):                          
         target_small = (512, 1024)
@@ -210,6 +251,8 @@ class DataGenerator(ImageDataGenerator):
             # Apply masks to all image sample
             masked = deepcopy(croped_ori)
             masked[croped_mask == 0] = 1
+            
+            result = self.has_many_white(cnt, masked)
 
             # Yield ([ori, masl],  ori) training batches
             gc.collect()        
@@ -222,8 +265,11 @@ class DataGenerator(ImageDataGenerator):
             # self.has_many_mask(croped_mask[0,:,:,:])
             
             # Save images
-            # self.save_img(cnt=cnt, img_size_type=img_size_type, mask=mask, masked=masked, ori=ori)
-            # cnt += 1
+            # Validationの画像を保存する
+#             if directory_small==cst.VALID_SMALL_SIZE:                
+#                 self.save_img(cnt=cnt, img_size_type=img_size_type, mask=mask, masked=masked, ori=ori)
+                
+            cnt += 1
 
             yield [masked, croped_mask], croped_ori
 
