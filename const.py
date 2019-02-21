@@ -15,8 +15,8 @@ MNT_PATH   = '/nfs/host/PConv-Keras'
 ORIGINAL_PATH = ['{}/house-dataset-src/original/'.format(MNT_PATH)] # 9317 imag bves
 RESIZED_PATH  = ['{}/house-dataset/resize-train-1536x3072/00'.format(MNT_PATH)]
 
-TRAIN_PATH    = '{}/house-dataset/resize-train-1536x3072'.format(MNT_PATH)
-VAL_PATH      = '{}/house-dataset/resize-valid-1536x3072'.format(MNT_PATH)
+TRAIN_PATH    = '{}/house-dataset/resize-train-768x1536'.format(MNT_PATH)
+VAL_PATH      = '{}/house-dataset/resize-valid-768x1536'.format(MNT_PATH)
 TEST_PATH     = '{}/house-dataset/test-crop-256-512'.format(MNT_PATH)
 
 # data dir
