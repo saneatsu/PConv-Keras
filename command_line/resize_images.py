@@ -24,7 +24,10 @@ for i in range(len(cst.ORIGINAL_PATH)):
     d = cst.ORIGINAL_PATH[i]
     d_child=[os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
     print(cst.ORIGINAL_PATH[i])
-    print(d_child)
+    print(d_child)    
+    print(cst.RESIZE_WIDTH)
+    print(cst.RESIZE_HEIGHT)
+
     
     # Resize to MAX_HEIGHTxMAX_WIDTH
     for j in range(len(d_child)):
