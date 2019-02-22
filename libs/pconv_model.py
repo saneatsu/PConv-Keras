@@ -14,7 +14,7 @@ import const as cst
 from keras.models import Model
 from keras.models import load_model
 from keras.optimizers import Adam
-from keras.layers import Input, Conv2D, UpSampling2D, Dropout, LeakyReLU, BatchNormalization, Activation
+from keras.layers import Input, Conv2D, UpSampling2D, Dropout, LeakyReLU, BatchNormalization, Activation, Multiply, Add, RepeatVector, Subtract, Lambda
 from keras.layers.merge import Concatenate
 from keras.applications import VGG16
 from keras import backend as K
@@ -23,13 +23,9 @@ import keras
 import tensorflow as tf
 
 
-class PConvUnet(object):
-    
-    # training: Ues 'CROP_HEIGHT'
-    # predict: Use 'MAX_HEIGHT'
-    def __init__(self, img_rows=cst.CROP_HEIGHT, img_cols=cst.CROP_WIDTH, weight_filepath=None):
-        """Create the PConvUnet. If variable image size, set img_rows and img_cols to None"""
-        
+class PConvUnet(object):    
+    def __init__(self, img_rows=cst.MAX_HEIGHT, img_cols=cst.MAX_WIDTH, weight_filepath=None):
+        """Create the PConvUnet. If variable image size, set img_rows and img_cols to None"""        
         # Settings
         self.weight_filepath = weight_filepath
         self.img_rows = img_rows
@@ -41,7 +37,6 @@ class PConvUnet(object):
         self.current_epoch = 0
         
         # VGG layers to extract features from (first maxpooling layers, see pp. 7 of paper)
-        self.vgg_layers = [3, 6, 10]
         self.vgg_layers = [3, 6, 10]
         
         # Get the vgg16 model for perceptual loss        
@@ -59,31 +54,23 @@ class PConvUnet(object):
         Extract features to be used in loss function from last conv layer, see architecture at:
         https://github.com/keras-team/keras/blob/master/keras/applications/vgg16.py
         """
-        
-        with tf.device("/cpu:0"):
-            # Input image to extract features from
-            img = Input(shape=(self.img_rows, self.img_cols, 3))
-
-            # Get the vgg network from Keras applications
-            vgg = VGG16(weights="imagenet", include_top=False)
-    
-            # Output the first three pooling layers
-            vgg.outputs = [vgg.layers[i].output for i in self.vgg_layers]
-    
-            # Create model and compile
-            cpu_model = Model(inputs=img, outputs=vgg(img))            
-            
-        model = cpu_model#keras.utils.multi_gpu_model(cpu_model, gpus=4)
+        img = Input(shape=(self.img_rows, self.img_cols, 3))
+        vgg = VGG16(weights="imagenet", include_top=False)
+        vgg.outputs = [vgg.layers[i].output for i in self.vgg_layers]
+        model = Model(inputs=img, outputs=vgg(img))
         model.trainable = False
-                    
         model.compile(loss='mse', optimizer='adam')
         
         return model
         
     def build_pconv_unet(self, train_bn=True, lr=0.0002):      
+        # INPUTS
+        inputs_img = Input((self.img_rows, self.img_cols, 3))
+        inputs_mask = Input((self.img_rows, self.img_cols, 3))
         
         # ENCODER
         def encoder_layer(img_in, mask_in, filters, kernel_size, bn=True):
+            print('encoder ')
             conv, mask = PConv2D(filters, kernel_size, strides=2, padding='same')([img_in, mask_in])
             if bn:
                 conv = BatchNormalization(name='EncBN'+str(encoder_layer.counter))(conv, training=train_bn)
@@ -103,45 +90,42 @@ class PConvUnet(object):
             conv = LeakyReLU(alpha=0.2)(conv)
             return conv, mask
         
+        encoder_layer.counter = 0
+
+        e_conv1, e_mask1 = encoder_layer(inputs_img, inputs_mask, 96, 7, bn=False) # 64*1.5
+        e_conv2, e_mask2 = encoder_layer(e_conv1, e_mask1, 192, 5) # 128*1.5
+        e_conv3, e_mask3 = encoder_layer(e_conv2, e_mask2, 384, 5) # 256*1.5
+        e_conv4, e_mask4 = encoder_layer(e_conv3, e_mask3, 384, 3)
+        e_conv5, e_mask5 = encoder_layer(e_conv4, e_mask4, 384, 3)
+        e_conv6, e_mask6 = encoder_layer(e_conv5, e_mask5, 384, 3)
+        e_conv7, e_mask7 = encoder_layer(e_conv6, e_mask6, 384, 3)
+        e_conv8, e_mask8 = encoder_layer(e_conv7, e_mask7, 384, 3)
+
+        d_conv9, d_mask9 = decoder_layer(e_conv8, e_mask8, e_conv7, e_mask7, 384, 3)
+        d_conv10, d_mask10 = decoder_layer(d_conv9, d_mask9, e_conv6, e_mask6, 384, 3)
+        d_conv11, d_mask11 = decoder_layer(d_conv10, d_mask10, e_conv5, e_mask5, 384, 3)
+        d_conv12, d_mask12 = decoder_layer(d_conv11, d_mask11, e_conv4, e_mask4, 384, 3)
+        d_conv13, d_mask13 = decoder_layer(d_conv12, d_mask12, e_conv3, e_mask3, 384, 3)
+        d_conv14, d_mask14 = decoder_layer(d_conv13, d_mask13, e_conv2, e_mask2, 192, 3)
+        d_conv15, d_mask15 = decoder_layer(d_conv14, d_mask14, e_conv1, e_mask1, 96, 3)
+        d_conv16, d_mask16 = decoder_layer(d_conv15, d_mask15, inputs_img, inputs_mask, 3, 3, bn=False)
+        x = Conv2D(3, 1, activation = 'sigmoid')(d_conv16)
+        ones = Lambda(lambda x: K.expand_dims(K.ones(K.int_shape(x)[1:]), 0))(inputs_mask)
+        in_mask = Subtract()([ones, inputs_mask])
+        x_inmask = Multiply(name = "in_mask")([x, in_mask])
+        x_outmask = Multiply(name = "out_mask")([inputs_img, inputs_mask])
+        outputs = Add(name = "last")([x_inmask, x_outmask])
         
         # Setup the model inputs / outputs
-        with tf.device("/cpu:0"):
-            # INPUTS
-            inputs_img = Input((self.img_rows, self.img_cols, 3))
-            inputs_mask = Input((self.img_rows, self.img_cols, 3))
-            
-            encoder_layer.counter = 0
+        model = Model(inputs=[inputs_img, inputs_mask], outputs=outputs)        
         
-            e_conv1, e_mask1 = encoder_layer(inputs_img, inputs_mask, 96, 7, bn=False) # 64*1.5
-            e_conv2, e_mask2 = encoder_layer(e_conv1, e_mask1, 192, 5) # 128*1.5
-            e_conv3, e_mask3 = encoder_layer(e_conv2, e_mask2, 384, 5) # 256*1.5
-            e_conv4, e_mask4 = encoder_layer(e_conv3, e_mask3, 384, 3)
-            e_conv5, e_mask5 = encoder_layer(e_conv4, e_mask4, 384, 3)
-            e_conv6, e_mask6 = encoder_layer(e_conv5, e_mask5, 384, 3)
-            e_conv7, e_mask7 = encoder_layer(e_conv6, e_mask6, 384, 3)
-            e_conv8, e_mask8 = encoder_layer(e_conv7, e_mask7, 384, 3)
-            
-            d_conv9, d_mask9 = decoder_layer(e_conv8, e_mask8, e_conv7, e_mask7, 384, 3)
-            d_conv10, d_mask10 = decoder_layer(d_conv9, d_mask9, e_conv6, e_mask6, 384, 3)
-            d_conv11, d_mask11 = decoder_layer(d_conv10, d_mask10, e_conv5, e_mask5, 384, 3)
-            d_conv12, d_mask12 = decoder_layer(d_conv11, d_mask11, e_conv4, e_mask4, 384, 3)
-            d_conv13, d_mask13 = decoder_layer(d_conv12, d_mask12, e_conv3, e_mask3, 384, 3)
-            d_conv14, d_mask14 = decoder_layer(d_conv13, d_mask13, e_conv2, e_mask2, 192, 3)
-            d_conv15, d_mask15 = decoder_layer(d_conv14, d_mask14, e_conv1, e_mask1, 96, 3)
-            d_conv16, d_mask16 = decoder_layer(d_conv15, d_mask15, inputs_img, inputs_mask, 3, 3, bn=False)
-            outputs = Conv2D(3, 1, activation = 'sigmoid')(d_conv16)        
-        
-            cpu_model = Model(inputs=[inputs_img, inputs_mask], outputs=outputs)
-            
-        model = keras.utils.multi_gpu_model(cpu_model, gpus=4)
-
         # Compile the model
         model.compile(
             optimizer = Adam(lr=lr),
             loss=self.loss_total(inputs_mask)
         )
-
         return model
+    
     
     def loss_total(self, mask):
         """

@@ -70,10 +70,6 @@ class DataGenerator(ImageDataGenerator):
                     white_cnt += 1
         white_rate = white_cnt/262144*100 # white_cntのMAXは512x512=262,144
 
-        # save_dir = '/nfs/host/PConv-Keras/sample_images'
-        # save_mask = Image.fromarray(masked)
-        # save_mask.save("{}/{}_masked_{}.jpg".format(save_dir, cnt, white_rate))
-
         if white_rate > 50: # 50%以上が白色判定された場合
             return True
         
@@ -93,11 +89,6 @@ class DataGenerator(ImageDataGenerator):
             return True
         
         mask_rate = len(masked_pixels)/262144*100 # 262,144=512x512
-        # print('\n' + str(mask_rate))
-
-        # if mask_rate < 1:
-        #    return False        
-        # return True
 
         if len(masked_pixels) != 0:
             return True
@@ -147,7 +138,6 @@ class DataGenerator(ImageDataGenerator):
         if ori is not None:
             save_ori = Image.fromarray(np.uint8((ori[0,:,:,:] * 1.)*255))
             save_ori.save("{}/{}_ori({}).jpg".format(save_dir, cnt, img_size_type))
-            
         print('Save')
 
     def flow_from_directory(self, directory_small, directory_medium, directory_large, *args, **kwargs):                          

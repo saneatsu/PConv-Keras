@@ -253,7 +253,7 @@ val_generator = val_datagen.flow_from_directory(
 
 model = PConvUnet(weight_filepath=cst.WEIGHT_PATH)
 
-# model.load_weights('/nfs/host/PConv-Keras/data/model/resize-1536x3072/512x512_GPU-4_Batch-7_Mix-1/weight/46_weights_2019-01-22-00-12-56.h5')
+# model.load_weights('/nfs/host/PConv-Keras/data/model/resize-1535x3072/weight_256x256_GPU-4_Batch-27_Mask-Circle/60_weights_2019-01-04-07-06-58.h5')
 
 model.fit(
     train_generator,
@@ -265,3 +265,5 @@ model.fit(
     callbacks=[
         TensorBoard(log_dir=cst.TFLOG_PATH, write_graph=False),
     ])
+
+# $ tensorboard --logdir=/nfs/host/PConv-Keras/data/model/tflogs --port 8082
