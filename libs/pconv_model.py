@@ -157,7 +157,7 @@ class PConvUnet(object):
             l6 = self.loss_tv(mask, y_comp)
             
             # Return loss function
-            return l1 + 6*l2 + 0.05*l3 + 120*(l4+l5) + 0.1*l6
+            return l1 + 6*l2 + 0.05*l3 + 120*(l4+l5) + 1*l6
 
         return loss
     
@@ -212,7 +212,6 @@ class PConvUnet(object):
 #         print('ErrorLog Path' + errlog_path)
         
         # Loop over epochs
-#         while True: # For raise StopIteration()
         for _ in range(epochs):
             start = time.time()
             print("Start       :" + str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
