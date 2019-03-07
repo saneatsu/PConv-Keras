@@ -157,7 +157,7 @@ class PConvUnet(object):
             l6 = self.loss_tv(mask, y_comp)
             
             # Return loss function
-            return l1 + 6*l2 + 0.05*l3 + 120*(l4+l5) + 1*l6
+            return l1 + 6*l2 + 0.05*l3 + 120*(l4+l5) + 0.1*l6
 
         return loss
     

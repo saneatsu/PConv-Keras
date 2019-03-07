@@ -28,7 +28,7 @@ VALID_MEDIUM_SIZE = '{}/house-dataset/resize-valid-768x1536'.format(MNT_PATH)
 VALID_LARGE_SIZE = '{}/house-dataset/resize-valid-1536x3072'.format(MNT_PATH)     
 
 # Save dir
-WEIGHT_PATH   = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-4_ModifyL6/weight/'.format(MNT_PATH)
-TFLOG_PATH    = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-4_ModifyL6/tflogs'.format(MNT_PATH)
+WEIGHT_PATH   = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-4_Remove255/weight/'.format(MNT_PATH)
+TFLOG_PATH    = '{}/data/model/resize-1536x3072/512x512_GPU-4_Batch-4_Remove255/tflogs'.format(MNT_PATH)
 ERRLOG_PATH   = '{}/error_log/'.format(MNT_PATH)
 
